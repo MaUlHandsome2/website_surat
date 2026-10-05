@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengganti Nama Surat Otomatis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1>Pengganti Nama Surat Otomatis</h1>
+                <p>Ubah nama penerima pada surat .docx atau .pdf Anda secara massal tanpa merusak format.</p>
+            </div>
+            <button id="themeToggleBtn" class="btn btn-outline btn-sm">🌙 Gelap</button>
+        </header>
+
+        <!-- Stepper Navigation -->
+        <div class="stepper">
+            <div class="step active" id="step1-nav">
+                <div class="step-circle">1</div>
+                <div class="step-label">Unggah Surat</div>
+            </div>
+            <div class="step-line"></div>
+            <div class="step" id="step2-nav">
+                <div class="step-circle">2</div>
+                <div class="step-label">Daftar Penerima</div>
+            </div>
+            <div class="step-line"></div>
+            <div class="step" id="step3-nav">
+                <div class="step-circle">3</div>
+                <div class="step-label">Ekspor & Unduh</div>
+            </div>
+        </div>
+
+        <main class="main-content">
+            <!-- Step 1: Unggah Surat -->
+            <section id="step1" class="step-content active">
+                <div class="panel">
+                    <h2>Langkah 1: Unggah Template Surat Anda</h2>
+                    <p class="mb-3">Unggah satu file surat yang sudah jadi (format `.docx` direkomendasikan untuk hasil terbaik, atau `.pdf`). Semua format, kop surat, dan tanda tangan akan tetap dipertahankan.</p>
+                    
+                    <div class="upload-area" id="fileUploadArea">
+                        <input type="file" id="mainFileInput" accept=".docx, .pdf" hidden>
+                        <button class="btn btn-primary btn-lg" onclick="document.getElementById('mainFileInput').click()">
+                            Pilih File Surat (.docx / .pdf)
+                        </button>
+                        <p class="mt-2 text-muted" id="fileNameDisplay">Belum ada file yang dipilih</p>
+                    </div>
+
+                    <div id="fileConfigArea" class="mt-4" style="display: none;">
+                        <div class="alert info">
+                            File <strong id="loadedFileName">surat.docx</strong> berhasil dimuat.
+                        </div>
+
+                        <div class="form-section mt-4">
+                            <h3>Tentukan Teks yang Akan Diganti</h3>
+                            <p class="text-sm mb-3">Pilih metode untuk menemukan nama lama yang ada di dalam surat tersebut.</p>
+                            
+                            <div class="detect-options">
+                                <div class="detect-card">
+                                    <h4>Deteksi Otomatis</h4>
+                                    <p class="text-sm">Mencari nama setelah kata "Yth." atau "Kepada".</p>
+                                    <button id="autoDetectBtn" class="btn btn-secondary mt-2 block">Deteksi Otomatis</button>
+                                </div>
+                                <div class="detect-card">
+                                    <h4>Input Manual</h4>
+                                    <p class="text-sm">Ketikkan persis nama lama yang ada di surat.</p>
+                                    <input type="text" id="manualNameInput" class="form-input mt-2" placeholder="Contoh: Kanda L. Wahyu Andi Purnama">
+                                </div>
+                            </div>
+
+                            <div id="detectionResult" class="mt-3 p-3 border-radius" style="display:none; background: var(--bg-color); border: 1px solid var(--border-color);">
+                                <p>Teks target: <strong id="targetNameDisplay">-</strong></p>
+                                <p id="occurrenceCountDisplay" class="mt-2 text-sm">-</p>
+                            </div>
+                        </div>
+
+                        <div class="form-section mt-4">
+                            <h3>Pengaturan Tambahan</h3>
+                            <div class="form-group">
+                                <label>Sapaan Default (Opsional)</label>
+                                <input type="text" id="defaultSapaanInput" class="form-input" placeholder="Misal: Bapak/Ibu (Jika dikosongkan, tidak ada sapaan)">
+                                <p class="text-sm text-muted mt-1">Sapaan ini akan mendahului nama jika pada daftar penerima kolom sapaan kosong.</p>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons mt-4 right-align">
+                            <button id="nextToStep2" class="btn btn-primary" disabled>Selanjutnya: Daftar Penerima &rarr;</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 2: Daftar Penerima -->
+            <section id="step2" class="step-content">
+                <div class="panel">
+                    <h2>Langkah 2: Masukkan Daftar Penerima</h2>
+                    <p>Masukkan nama-nama yang akan menggantikan teks <strong class="target-name-highlight"></strong> pada surat.</p>
+                    
+                    <div class="import-options">
+                        <div class="import-card">
+                            <h3>Tempel Daftar Nama</h3>
+                            <textarea id="bulkTextInput" class="form-input" placeholder="Satu nama per baris...&#10;Contoh:&#10;Bapak Budi Santoso&#10;Siti Aminah, S.E."></textarea>
+                            <button id="addBulkBtn" class="btn btn-outline mt-2 block">Tambahkan</button>
+                        </div>
+                        
+                        <div class="import-card">
+                            <h3>Impor dari Excel/CSV</h3>
+                            <p class="text-sm mb-2">Sistem akan membaca kolom bernama "nama" atau mengambil kolom pertama. <a href="#" id="downloadExcelSample">Unduh contoh Excel</a>.</p>
+                            <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="form-input">
+                        </div>
+                    </div>
+
+                    <div class="table-actions mt-4">
+                        <button id="addSingleRowBtn" class="btn btn-secondary">+ Tambah 1 Baris</button>
+                        <button id="clearAllRowsBtn" class="btn btn-danger">Hapus Semua</button>
+                    </div>
+
+                    <div class="table-container">
+                        <table id="recipientTable">
+                            <thead>
+                                <tr>
+                                    <th class="col-no">No</th>
+                                    <th>Sapaan (Opsional)</th>
+                                    <th>Nama Penerima (Termasuk Gelar)</th>
+                                    <th class="col-action">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recipientTbody">
+                                <!-- Data akan dirender ke sini -->
+                            </tbody>
+                        </table>
+                        <div id="duplicateWarning" class="alert warning mt-3" style="display: none;"></div>
+                        <div class="table-summary mt-2">Total Penerima: <strong id="totalRecipients">0</strong></div>
+                    </div>
+
+                    <div class="action-buttons space-between mt-4">
+                        <button id="backToStep1" class="btn btn-secondary">&larr; Kembali</button>
+                        <button id="nextToStep3" class="btn btn-primary">Selanjutnya: Ekspor & Unduh &rarr;</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 3: Ekspor -->
+            <section id="step3" class="step-content">
+                <div class="panel-layout">
+                    <div class="form-panel">
+                        <h2>Langkah 3: Pratinjau & Unduh</h2>
+                        <div class="summary-box">
+                            <p>Teks <strong class="target-name-highlight"></strong> akan diganti dengan <strong id="finalCount">0</strong> nama berbeda.</p>
+                        </div>
+
+                        <div class="export-options mt-4">
+                            <button id="exportZipBtn" class="btn btn-primary block mb-3">Unduh File ZIP (Satu per satu)</button>
+                            <button id="exportCombinedBtn" class="btn btn-secondary block mb-3">Unduh File Gabungan</button>
+                        </div>
+                        
+                        <div id="exportProgress" class="progress-container mt-4" style="display: none;">
+                            <p id="progressText">Memproses: 0%</p>
+                            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                            <button id="cancelExportBtn" class="btn btn-sm btn-danger mt-2">Batalkan</button>
+                        </div>
+
+                        <div class="action-buttons mt-5">
+                            <button id="backToStep2" class="btn btn-outline block">&larr; Kembali ke Daftar Nama</button>
+                        </div>
+                    </div>
+
+                    <div class="preview-panel">
+                        <div class="preview-header mb-3">
+                            <h3>Pratinjau Hasil Teks</h3>
+                            <p class="text-sm">Berikut adalah contoh teks yang akan dihasilkan.</p>
+                        </div>
+                        
+                        <div class="preview-controls mb-3">
+                            <button id="prevPreviewBtn" class="btn btn-sm btn-secondary">&larr;</button>
+                            <span id="previewIndicator" class="text-sm font-weight-bold">Surat 1 dari 0</span>
+                            <button id="nextPreviewBtn" class="btn btn-sm btn-secondary">&rarr;</button>
+                        </div>
+                        
+                        <div class="search-box mb-3">
+                            <input type="text" id="searchPreviewInput" class="form-input" placeholder="Cari nama...">
+                        </div>
+
+                        <div class="preview-box">
+                            <p class="text-sm text-muted">Contoh teks sebelum (di dalam dokumen):</p>
+                            <div class="preview-text-box before-box mb-3">Yth. <span class="highlight-old target-name-highlight">Nama Lama</span></div>
+                            
+                            <p class="text-sm text-muted">Contoh teks sesudah:</p>
+                            <div class="preview-text-box after-box">Yth. <span class="highlight-new" id="previewResultName">Nama Baru</span></div>
+                            
+                            <div class="alert info mt-3" style="font-size: 0.8rem;">
+                                Catatan: Aplikasi memproses dokumen Anda di latar belakang. Struktur, logo, font, dan format dokumen asli tetap 100% dipertahankan.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- CDNs -->
+    <!-- PizZip untuk ekstrak dan kompres file DOCX (zip format) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
+    
+    <!-- PDF.js untuk memproses file PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+    
+    <!-- pdf-lib untuk mengedit dan menggambar di atas PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+
+    <!-- SheetJS untuk membaca file Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- JSZip untuk membuat file ZIP keluaran (untuk banyak file PDF/DOCX) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <!-- FileSaver untuk mengunduh file hasil -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <!-- App Scripts -->
+    <script src="js/docx-processor.js"></script>
+    <script src="js/pdf-processor.js"></script>
+    <script src="js/recipients.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
